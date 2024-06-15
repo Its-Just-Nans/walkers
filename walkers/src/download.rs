@@ -1,4 +1,4 @@
-use std::{path::PathBuf, pin::Pin};
+use std::{env, path::PathBuf, pin::Pin};
 
 use egui::Context;
 use futures::{
@@ -33,7 +33,11 @@ impl Default for HttpOptions {
     fn default() -> Self {
         Self {
             cache: None,
-            user_agent: HeaderValue::from_static("Walkers"),
+            user_agent: HeaderValue::from_static(concat!(
+                env!("CARGO_PKG_NAME"),
+                "/",
+                env!("CARGO_PKG_VERSION"),
+            )),
         }
     }
 }
