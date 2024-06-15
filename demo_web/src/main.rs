@@ -1,15 +1,20 @@
 use demo::Provider;
 use walkers::sources::{Attribution, TileSource};
-use walkers::{TileId, Tiles};
+use walkers::TileId;
 
-pub struct CustomSource {}
+#[derive(Default)]
+pub struct CustomSource {
+    pub name: String,
+}
 
 impl CustomSource {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            name: "Humanitarian OpenStreetMap".to_owned(),
+        }
     }
-    pub fn get_provider_name() -> Provider {
-        Provider::Custom("Humanitarian OpenStreepMap".to_owned())
+    pub fn get_provider_name(&self) -> Provider {
+        Provider::Custom(self.name.clone())
     }
 }
 
@@ -33,20 +38,22 @@ impl TileSource for CustomSource {
 
 #[cfg(target_arch = "wasm32")]
 fn main() {
+    use walkers::Tiles;
     // Redirect `log` message to `console.log` and friends:
     eframe::WebLogger::init(log::LevelFilter::Debug).ok();
 
     let web_options = eframe::WebOptions::default();
 
     wasm_bindgen_futures::spawn_local(async {
+        let source = CustomSource::new();
         eframe::WebRunner::new()
             .start(
                 "the_canvas_id", // hardcode it
                 web_options,
                 Box::new(|cc| {
                     Box::new(demo::MyApp::new(cc.egui_ctx.clone()).with_provider(
-                        CustomSource::get_provider_name(),
-                        Box::new(Tiles::new(CustomSource::new(), cc.egui_ctx.to_owned())),
+                        source.get_provider_name(),
+                        Box::new(Tiles::new(source, cc.egui_ctx.to_owned())),
                     ))
                 }),
             )
