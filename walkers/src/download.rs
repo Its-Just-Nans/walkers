@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf, pin::Pin};
+use std::{path::PathBuf, pin::Pin};
 
 use egui::Context;
 use futures::{
