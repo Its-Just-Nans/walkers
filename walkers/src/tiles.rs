@@ -230,11 +230,7 @@ mod tests {
         let request = anticipated.expect().await;
         assert_eq!(
             request.headers().get(header::USER_AGENT),
-            Some(&HeaderValue::from_static(concat!(
-                "Walkers",
-                "/",
-                env!("CARGO_PKG_VERSION"),
-            )))
+            Some(&HeaderValue::from_static("Walkers"))
         );
 
         // Eventually it gets downloaded and become available in cache.

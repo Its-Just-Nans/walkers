@@ -33,11 +33,7 @@ impl Default for HttpOptions {
     fn default() -> Self {
         Self {
             cache: None,
-            user_agent: HeaderValue::from_static(concat!(
-                env!("CARGO_PKG_NAME"),
-                "/",
-                env!("CARGO_PKG_VERSION"),
-            )),
+            user_agent: HeaderValue::from_static("Walkers"),
         }
     }
 }

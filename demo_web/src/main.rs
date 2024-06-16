@@ -3,11 +3,11 @@ use walkers::sources::{Attribution, TileSource};
 use walkers::TileId;
 
 #[derive(Default)]
-pub struct CustomSource {
+pub struct MySource {
     pub name: String,
 }
 
-impl CustomSource {
+impl MySource {
     pub fn new() -> Self {
         Self {
             name: "Humanitarian OpenStreetMap".to_owned(),
@@ -18,7 +18,7 @@ impl CustomSource {
     }
 }
 
-impl TileSource for CustomSource {
+impl TileSource for MySource {
     fn tile_url(&self, tile_id: TileId) -> String {
         format!(
             "https://tile-b.openstreetmap.fr/hot/{}/{}/{}.png",
@@ -45,7 +45,7 @@ fn main() {
     let web_options = eframe::WebOptions::default();
 
     wasm_bindgen_futures::spawn_local(async {
-        let source = CustomSource::new();
+        let source = MySource::new();
         eframe::WebRunner::new()
             .start(
                 "the_canvas_id", // hardcode it
