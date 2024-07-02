@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use crate::plugins::ImagesPluginData;
 use egui::Context;
-use walkers::{HttpOptions, Map, MapMemory, Tiles, TilesManager};
+use walkers::{HttpOptions, HttpTiles, Map, MapMemory, Tiles};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Provider {
@@ -31,12 +31,12 @@ fn http_options() -> HttpOptions {
     }
 }
 
-fn providers(egui_ctx: Context) -> HashMap<Provider, Box<dyn TilesManager + Send>> {
-    let mut providers: HashMap<Provider, Box<dyn TilesManager + Send>> = HashMap::default();
+fn providers(egui_ctx: Context) -> HashMap<Provider, Box<dyn Tiles + Send>> {
+    let mut providers: HashMap<Provider, Box<dyn Tiles + Send>> = HashMap::default();
 
     providers.insert(
         Provider::OpenStreetMap,
-        Box::new(Tiles::with_options(
+        Box::new(HttpTiles::with_options(
             walkers::sources::OpenStreetMap,
             http_options(),
             egui_ctx.to_owned(),
@@ -45,7 +45,7 @@ fn providers(egui_ctx: Context) -> HashMap<Provider, Box<dyn TilesManager + Send
 
     providers.insert(
         Provider::Geoportal,
-        Box::new(Tiles::with_options(
+        Box::new(HttpTiles::with_options(
             walkers::sources::Geoportal,
             http_options(),
             egui_ctx.to_owned(),
@@ -65,7 +65,7 @@ fn providers(egui_ctx: Context) -> HashMap<Provider, Box<dyn TilesManager + Send
     if let Some(token) = mapbox_access_token {
         providers.insert(
             Provider::MapboxStreets,
-            Box::new(Tiles::with_options(
+            Box::new(HttpTiles::with_options(
                 walkers::sources::Mapbox {
                     style: walkers::sources::MapboxStyle::Streets,
                     access_token: token.to_string(),
@@ -77,7 +77,7 @@ fn providers(egui_ctx: Context) -> HashMap<Provider, Box<dyn TilesManager + Send
         );
         providers.insert(
             Provider::MapboxSatellite,
-            Box::new(Tiles::with_options(
+            Box::new(HttpTiles::with_options(
                 walkers::sources::Mapbox {
                     style: walkers::sources::MapboxStyle::Satellite,
                     access_token: token.to_string(),
@@ -93,7 +93,7 @@ fn providers(egui_ctx: Context) -> HashMap<Provider, Box<dyn TilesManager + Send
 }
 
 pub struct MyApp {
-    providers: HashMap<Provider, Box<dyn TilesManager + Send>>,
+    providers: HashMap<Provider, Box<dyn Tiles + Send>>,
     selected_provider: Provider,
     map_memory: MapMemory,
     images_plugin_data: ImagesPluginData,
