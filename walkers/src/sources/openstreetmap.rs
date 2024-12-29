@@ -1,7 +1,8 @@
 use super::{Attribution, TileSource};
-use crate::TileId;
+use crate::mercator::TileId;
 
 /// <https://www.openstreetmap.org/about>
+#[derive(Default, Clone)]
 pub struct OpenStreetMap;
 
 impl TileSource for OpenStreetMap {

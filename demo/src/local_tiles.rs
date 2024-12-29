@@ -1,10 +1,11 @@
 use egui::pos2;
 use egui::ColorImage;
 use egui::Context;
+use egui::Mesh;
 use egui::Rect;
+use egui::Vec2;
 use walkers::sources::Attribution;
 use walkers::Texture;
-use walkers::TextureWithUv;
 use walkers::TileId;
 use walkers::Tiles;
 
@@ -19,13 +20,12 @@ impl LocalTiles {
 }
 
 impl Tiles for LocalTiles {
-    fn at(&mut self, _tile_id: TileId) -> Option<TextureWithUv> {
+    fn with_position_and_size(&mut self, _tile_id: TileId, pos: Vec2, size: f64) -> Option<Mesh> {
         let image = ColorImage::example();
 
-        Some(TextureWithUv {
-            texture: Texture::from_color_image(image, &self.egui_ctx),
-            uv: Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
-        })
+        let texture = Texture::from_color_image(image, &self.egui_ctx);
+        let uv = Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0));
+        Some(texture.mesh_with_uv(pos, size, uv))
     }
 
     fn attribution(&self) -> Attribution {

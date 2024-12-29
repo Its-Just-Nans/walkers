@@ -54,7 +54,7 @@ pub fn images(images_plugin_data: &mut ImagesPluginData) -> impl Plugin {
 }
 
 /// Sample map plugin which draws custom stuff on the map.
-pub struct CustomShapes {}
+pub struct CustomShapes;
 
 impl Plugin for CustomShapes {
     fn run(self: Box<Self>, ui: &mut Ui, response: &Response, projector: &Projector) {

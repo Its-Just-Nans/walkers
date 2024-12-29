@@ -37,8 +37,12 @@ impl Texture {
         self.0.size_vec2()
     }
 
-    pub(crate) fn mesh_with_uv(&self, screen_position: Vec2, tile_size: f64, uv: Rect) -> Mesh {
+    pub fn mesh_with_uv(&self, screen_position: Vec2, tile_size: f64, uv: Rect) -> Mesh {
         self.mesh_with_rect_and_uv(rect(screen_position, tile_size), uv)
+    }
+
+    pub fn get_mesh(&self) -> Mesh {
+        Mesh::with_texture(self.0.id())
     }
 
     pub(crate) fn mesh_with_rect(&self, rect: Rect) -> Mesh {
@@ -65,14 +69,14 @@ pub struct TextureWithUv {
 }
 
 pub trait Tiles {
-    fn at(&mut self, tile_id: TileId) -> Option<TextureWithUv>;
+    fn with_position_and_size(&mut self, tile_id: TileId, pos: Vec2, size: f64) -> Option<Mesh>;
     fn attribution(&self) -> Attribution;
     fn tile_size(&self) -> u32;
 }
 
 /// Downloads the tiles via HTTP. It must persist between frames.
 pub struct HttpTiles {
-    attribution: Attribution,
+    source: Box<dyn TileSource + Send>,
 
     cache: LruCache<TileId, Option<Texture>>,
 
@@ -84,17 +88,13 @@ pub struct HttpTiles {
 
     #[allow(dead_code)] // Significant Drop
     runtime: Runtime,
-
-    tile_size: u32,
-
-    max_zoom: u8,
 }
 
 impl HttpTiles {
     /// Construct new [`Tiles`] with default [`HttpOptions`].
     pub fn new<S>(source: S, egui_ctx: Context) -> Self
     where
-        S: TileSource + Send + 'static,
+        S: TileSource + Send + Clone + 'static,
     {
         Self::with_options(source, HttpOptions::default(), egui_ctx)
     }
@@ -102,19 +102,16 @@ impl HttpTiles {
     /// Construct new [`Tiles`] with supplied [`HttpOptions`].
     pub fn with_options<S>(source: S, http_options: HttpOptions, egui_ctx: Context) -> Self
     where
-        S: TileSource + Send + 'static,
+        S: TileSource + Send + Clone + 'static,
     {
         // This ensures that newer requests are prioritized.
         let channel_size = MAX_PARALLEL_DOWNLOADS;
 
         let (request_tx, request_rx) = channel(channel_size);
         let (tile_tx, tile_rx) = channel(channel_size);
-        let attribution = source.attribution();
-        let tile_size = source.tile_size();
-        let max_zoom = source.max_zoom();
 
         let runtime = Runtime::new(download_continuously(
-            source,
+            source.clone(),
             http_options,
             request_rx,
             tile_tx,
@@ -126,13 +123,11 @@ impl HttpTiles {
         let cache_size = std::num::NonZeroUsize::new(256).unwrap();
 
         Self {
-            attribution,
+            source: Box::new(source),
             cache: LruCache::new(cache_size),
             request_tx,
             tile_rx,
             runtime,
-            tile_size,
-            max_zoom,
         }
     }
 
@@ -217,24 +212,25 @@ impl Tiles for HttpTiles {
     /// Attribution of the source this tile cache pulls images from. Typically,
     /// this should be displayed somewhere on the top of the map widget.
     fn attribution(&self) -> Attribution {
-        self.attribution.clone()
+        self.source.attribution()
     }
 
     /// Return a tile if already in cache, schedule a download otherwise.
-    fn at(&mut self, tile_id: TileId) -> Option<TextureWithUv> {
+    fn with_position_and_size(&mut self, tile_id: TileId, pos: Vec2, size: f64) -> Option<Mesh> {
         self.put_single_downloaded_tile_in_cache();
 
-        self.make_sure_is_downloaded(if tile_id.zoom > self.max_zoom {
-            interpolate_higher_zoom(tile_id, self.max_zoom).0
+        self.make_sure_is_downloaded(if tile_id.zoom > self.source.max_zoom() {
+            interpolate_higher_zoom(tile_id, self.source.max_zoom()).0
         } else {
             tile_id
         });
 
         self.get_or_interpolate(tile_id)
+            .map(|texture_with_uv| self.source.get_mesh(texture_with_uv, pos, size))
     }
 
     fn tile_size(&self) -> u32 {
-        self.tile_size
+        self.source.tile_size()
     }
 }
 
@@ -253,6 +249,7 @@ mod tests {
         zoom: 3,
     };
 
+    #[derive(Clone)]
     struct TestSource {
         base_url: String,
     }
@@ -451,6 +448,7 @@ mod tests {
     }
 
     /// Tile source, which gives invalid urls.
+    #[derive(Clone)]
     struct GarbageSource;
 
     impl TileSource for GarbageSource {

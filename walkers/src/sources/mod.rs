@@ -4,7 +4,8 @@ mod geoportal;
 mod mapbox;
 mod openstreetmap;
 
-use crate::mercator::TileId;
+use crate::{mercator::TileId, TextureWithUv};
+use egui::{Color32, Mesh, Rect, Vec2};
 pub use geoportal::Geoportal;
 pub use mapbox::{Mapbox, MapboxStyle};
 pub use openstreetmap::OpenStreetMap;
@@ -29,5 +30,12 @@ pub trait TileSource {
 
     fn max_zoom(&self) -> u8 {
         19
+    }
+
+    fn get_mesh(&self, texture_uv: TextureWithUv, pos: Vec2, size: f64) -> Mesh {
+        let rec = Rect::from_min_size(pos.to_pos2(), Vec2::splat(size as f32));
+        let mut mesh = texture_uv.texture.get_mesh();
+        mesh.add_rect_with_uv(rec, texture_uv.uv, Color32::WHITE);
+        mesh
     }
 }

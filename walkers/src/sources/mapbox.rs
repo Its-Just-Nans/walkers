@@ -34,7 +34,7 @@ impl MapboxStyle {
 
 /// Mapbox static tile source.
 /// <https://docs.mapbox.com/api/maps/static-tiles/>
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Mapbox {
     /// Predefined style to use
     pub style: MapboxStyle,

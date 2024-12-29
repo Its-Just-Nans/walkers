@@ -1,8 +1,11 @@
 use super::{Attribution, TileSource};
+use crate::TextureWithUv;
 use crate::TileId;
+use egui::{Color32, Mesh, Rect, Vec2};
 
 /// Orthophotomap layer from Poland's Geoportal.
 /// <https://www.geoportal.gov.pl/uslugi/usluga-przegladania-wms>
+#[derive(Default, Clone)]
 pub struct Geoportal;
 
 impl TileSource for Geoportal {
@@ -28,5 +31,12 @@ impl TileSource for Geoportal {
             logo_light: None,
             logo_dark: None,
         }
+    }
+
+    fn get_mesh(&self, texture_uv: TextureWithUv, pos: Vec2, size: f64) -> Mesh {
+        let rec = Rect::from_min_size(pos.to_pos2(), Vec2::splat(size as f32));
+        let mut mesh = texture_uv.texture.get_mesh();
+        mesh.add_rect_with_uv(rec, texture_uv.uv, Color32::from_rgb(30, 130, 130));
+        mesh
     }
 }

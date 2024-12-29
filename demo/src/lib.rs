@@ -143,7 +143,7 @@ impl eframe::App for MyApp {
                 let map = map
                     .with_plugin(plugins::places())
                     .with_plugin(plugins::images(&mut self.images_plugin_data))
-                    .with_plugin(plugins::CustomShapes {})
+                    .with_plugin(plugins::CustomShapes)
                     .with_plugin(&mut self.click_watcher);
 
                 // Draw the map widget.
